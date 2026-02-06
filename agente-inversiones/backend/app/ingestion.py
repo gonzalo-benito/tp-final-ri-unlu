@@ -2,6 +2,7 @@
 Normaliza documentos y los publica vía tool_upsert_docs.
 """
 from typing import List, Tuple
+import os
 import re
 import time
 import feedparser
@@ -16,8 +17,12 @@ from .tools import tool_upsert_docs
 DEFAULT_FEEDS = [
     # Reuters Business
     "https://feeds.reuters.com/reuters/businessNews",
+    # CNBC Top News
+    "https://www.cnbc.com/id/100003114/device/rss/rss.html",
     # MarketWatch Top Stories
     "https://feeds.marketwatch.com/marketwatch/topstories/",
+    # SEC EDGAR (current filings)
+    "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&count=40&output=atom",
 ]
 
 
@@ -63,12 +68,25 @@ def _detect_tickers(text: str, portfolio_tickers: List[str]) -> List[str]:
     return sorted(list(set(found)))
 
 
+def _extra_feeds() -> List[str]:
+    raw = os.getenv("EXTRA_FEEDS", "")
+    return [f.strip() for f in raw.split(",") if f.strip()]
+
+
+def _parse_feed(url: str):
+    if "sec.gov" in url:
+        user_agent = os.getenv("SEC_USER_AGENT", "tp-final-ri-unlu/1.0 contacto@ejemplo.com")
+        return feedparser.parse(url, request_headers={"User-Agent": user_agent})
+    return feedparser.parse(url)
+
+
 def ingest_rss(feeds: List[str] | None = None) -> dict:
     feeds = feeds or DEFAULT_FEEDS
+    feeds = [*feeds, *_extra_feeds()]
     portfolio = _get_portfolio_tickers()
     docs = []
     for feed in feeds:
-        parsed = feedparser.parse(feed)
+        parsed = _parse_feed(feed)
         for entry in parsed.entries:
             url = getattr(entry, "link", None) or getattr(entry, "id", None) or ""
             title = getattr(entry, "title", "")
@@ -119,6 +137,76 @@ def ingest_yahoo_finance_by_ticker() -> dict:
     if docs:
         tool_upsert_docs(docs)
     return {"tickers": len(portfolio), "docs_indexed": len(docs)}
+
+
+def _gdelt_query_for_portfolio(tickers: List[str]) -> str | None:
+    if not tickers:
+        return None
+    return " OR ".join([t for t in tickers])
+
+
+def _parse_gdelt_date(value: str | None) -> str | None:
+    if not value:
+        return None
+    try:
+        # Example: 20250205T171516Z
+        dt = datetime.strptime(value, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+        return dt.isoformat()
+    except Exception:
+        return None
+
+
+def ingest_gdelt_docs(query: str | None = None) -> dict:
+    if os.getenv("GDELT_ENABLED", "0").lower() not in {"1", "true", "yes"}:
+        return {"docs_indexed": 0, "reason": "disabled"}
+
+    portfolio = _get_portfolio_tickers()
+    query = query or _gdelt_query_for_portfolio(portfolio)
+    if not query:
+        return {"docs_indexed": 0, "reason": "no_query"}
+
+    url = os.getenv("GDELT_DOC_API_URL", "https://api.gdeltproject.org/api/v2/doc/doc")
+    mode = os.getenv("GDELT_MODE", "ArtList")
+    maxrecords = int(os.getenv("GDELT_MAXRECORDS", "50"))
+    params = {
+        "query": query,
+        "mode": mode,
+        "format": "json",
+        "maxrecords": maxrecords,
+    }
+
+    try:
+        import requests
+
+        resp = requests.get(url, params=params, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception:
+        return {"docs_indexed": 0, "reason": "request_failed"}
+
+    docs = []
+    for item in data.get("articles", []):
+        title = item.get("title", "")
+        url_item = item.get("url", "")
+        source = item.get("domain") or _extract_source(url_item)
+        timestamp = _parse_gdelt_date(item.get("seendate"))
+        text = title
+        tickers = _detect_tickers(title, portfolio)
+        if not tickers:
+            continue
+        docs.append(
+            {
+                "source": source,
+                "url": url_item,
+                "title": title,
+                "text": text,
+                "timestamp": timestamp,
+                "tickers": tickers,
+            }
+        )
+    if docs:
+        tool_upsert_docs(docs)
+    return {"docs_indexed": len(docs), "query": query}
 
 
 def fetch_prices(tickers: List[str]) -> List[Tuple[str, float, float]]:

@@ -2,12 +2,20 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .db import init_db, get_conn
 from .models import PortfolioItem, Digest, DocItem
+import os
 import sqlite3
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_W_SENT = float(os.getenv("W_SENT", "0.5"))
+DEFAULT_W_RECENCY = float(os.getenv("W_RECENCY", "0.3"))
+DEFAULT_W_AUTH = float(os.getenv("W_AUTH", "0.2"))
 
 def _configure_logging() -> None:
     logs_dir = Path(__file__).resolve().parent.parent / "logs"
@@ -135,7 +143,7 @@ def list_alerts():
 
 # Search: backend configurable (Meilisearch/Terrier)
 from .clients.search_backend import get_search_backend
-from .ingestion import ingest_rss, ingest_yahoo_finance_by_ticker
+from .ingestion import ingest_rss, ingest_yahoo_finance_by_ticker, ingest_gdelt_docs
 from .terrier_index import build_index, _default_db_path, _default_index_path
 from .alerts import run_price_drop_alerts
 from .signals import run_news_signals, run_volume_signals, aggregate_recommendation_for_ticker
@@ -148,9 +156,9 @@ def search(
     since: str | None = None,
     source: str | None = None,
     limit: int = 10,
-    w_sent: float = 0.5,
-    w_recency: float = 0.3,
-    w_auth: float = 0.2,
+    w_sent: float = DEFAULT_W_SENT,
+    w_recency: float = DEFAULT_W_RECENCY,
+    w_auth: float = DEFAULT_W_AUTH,
 ):
     backend = get_search_backend()
     if not backend.ready():
@@ -197,6 +205,7 @@ def ingest_news():
         raise HTTPException(status_code=503, detail=f"Search backend '{backend.name}' not available")
     r1 = ingest_rss()
     r2 = ingest_yahoo_finance_by_ticker()
+    r3 = ingest_gdelt_docs()
     reindex = None
     if backend.name == "terrier":
         try:
@@ -204,8 +213,8 @@ def ingest_news():
             logger.info("Terrier reindex after ingest: %s", reindex)
         except Exception as exc:
             logger.exception("Terrier reindex failed after ingest: %s", exc)
-    logger.info("Ingested news rss=%s yahoo=%s", r1, r2)
-    return {"rss": r1, "yahoo": r2, "reindex": reindex}
+    logger.info("Ingested news rss=%s yahoo=%s gdelt=%s", r1, r2, r3)
+    return {"rss": r1, "yahoo": r2, "gdelt": r3, "reindex": reindex}
 
 
 # Ingesta de precios y generación de alertas por caída porcentual

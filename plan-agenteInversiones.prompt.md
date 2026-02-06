@@ -15,12 +15,13 @@ Fuentes Gratuitas
   - `GDELT 2.0` (Docs API) — cobertura global y acceso gratuito.
   - RSS públicos: Reuters Business, CNBC, MarketWatch, Yahoo Finance.
   - SEC/EDGAR RSS para filings (8‑K, 10‑Q, 10‑K, earnings).
+- Nota (estado actual): el prototipo trae noticias desde Yahoo Finance; se planifica ampliar a RSS/SEC/GDELT como en el paper 3.
 - Reddit:
   - API oficial (app gratuita con límites) y/o RSS; subreddits: `r/investing`, `r/stocks`, `r/wallstreetbets`, `r/ArgentinaEconomics` (si aplica al caso).
 
 Arquitectura
 - Pipeline: ingesta diaria → normalización → persistencia → indexación → consulta → ranking → alertas → resumen diario por LLM.
-- Ingesta: ejecución diaria (y refrescos intraday opcionales) para precios y documentos (RSS/GDELT/Reddit) por palabras clave y ticker.
+- Ingesta: ejecución diaria (y refrescos intraday opcionales) para precios y documentos (RSS/GDELT/SEC/Reddit). Se alineará con el paper 3: crawling multi‑fuente y población automática de conocimiento desde tablas/feeds.
 - Normalización: extracción de texto/título/fecha/fuente; detección de tickers/empresa (diccionario + regex); idioma; deduplicación por `url` y hash.
 - Persistencia (gratis y simple):
   - `SQLite`: tablas `portfolio` (posiciones), `docs` (texto/fuente/timestamp/tickers), `signals` (precio/volumen/eventos), `alerts` (historial y umbrales), `digests` (resúmenes diarios generados por LLM por ticker/fecha).
@@ -31,6 +32,7 @@ Arquitectura
 
 Consultas e Índice
 - Consultas por instrumento: query base `[ticker|empresa] + eventos (earnings, downgrade, lawsuit, guidance, insider, dividend, buyback)` + alias/sinónimos.
+- Expansión semántica (paper 3): lematización y sinónimos financieros (ej. “MercadoLibre”↔“MELI”, “earnings”↔“results”), para recuperar noticias relevantes aunque el ticker no aparezca explícito.
 - Filtros: por `ticker`, ventana temporal (últimas X horas/días), tipo de fuente (RSS/GDELT/Reddit/SEC).
 - Índice invertido: tokenización, stopwords y stemming; postings con TF, DF y longitud de documento; DAAT/TAAT según necesidad. 
 - Modelo BM25 como columna vertebral:
@@ -131,6 +133,7 @@ Papers y relación con el proyecto
 - Paper 1 (arXiv 2407.15788, “Extracting Structured Insights from Financial News”): propone extraer tickers, sentimiento por compañía y resúmenes desde noticias crudas con validación de mapeo ticker‑empresa; reporta evaluación en 5530 artículos. Relevancia: justifica la etapa de extracción de tickers y sentimiento, y provee dataset auxiliar (noticias con sentimiento a nivel ticker).
 - Paper 2 (Findings EMNLP 2025, “FinGEAR”): enfoque retrieval‑first para documentos financieros largos (10‑K), con estructura jerárquica, léxico financiero y re‑ranker. Relevancia: inspira recuperación estructurada para filings SEC y uso de señales léxicas/jerárquicas + re‑ranking.
 - Paper 3 (Expert Systems with Applications 2011, “Financial news semantic search engine”): arquitectura con crawling, anotación semántica y búsqueda para noticias financieras. Relevancia: respalda la arquitectura crawler→indexación→ranking y la necesidad de integración de fuentes heterogéneas.
+- Relación directa (paper 3): justifica integrar múltiples fuentes y una capa semántica (ontología ligera/etiquetas) para mejorar precisión y filtros (sector/evento), más allá de keywords simples.
 - Dataset sugerido: Kaggle “Yahoo Finance News” como corpus base de noticias para evaluación IR; complementario al dataset del Paper 1.
 - Teoría de evaluación (Guía 3 – Evaluación de la Recuperación): usar métricas estándar (P@k, MAP, NDCG, MRR, Recall) y análisis de trade‑offs; justificar pooling/etiquetado y separación ajuste vs evaluación final.
 

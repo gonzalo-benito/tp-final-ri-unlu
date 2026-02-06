@@ -19,6 +19,8 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Config rápida (recomendado): copiá los `.env.example` a `.env`.
+
 ### Lanzar API
 ```zsh
 uvicorn app.main:app --reload --port 8000
@@ -66,6 +68,16 @@ export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 export JVM_PATH=/usr/lib/jvm/java-17-openjdk-amd64/lib/server/libjvm.so
 ```
 
+### Archivo .env
+Backend: `agente-inversiones/backend/.env`
+Frontend: `agente-inversiones/frontend/.env`
+
+Variables principales (backend):
+- `SEARCH_BACKEND`, `JAVA_HOME`, `JVM_PATH`
+- `W_SENT`, `W_RECENCY`, `W_AUTH` (pesos de re‑ranking)
+- `EXTRA_FEEDS`, `SEC_USER_AGENT`
+- `GDELT_ENABLED`, `GDELT_DOC_API_URL`, `GDELT_MODE`, `GDELT_MAXRECORDS`
+
 Construcción de índice desde SQLite (usa `backend/data/app.db` por defecto):
 
 ```zsh
@@ -112,3 +124,21 @@ npm run dev
 - Esquema SQLite en `app/db.py`.
 - Próximos pasos: ingesta RSS/GDELT/Reddit, alertas de precio, generación de `digests` diarios, RAG y métricas RI.
  - Endpoints de ingesta y alertas disponibles para pruebas locales.
+
+### Fuentes RSS actuales
+- Reuters, CNBC, MarketWatch y SEC EDGAR (current filings).
+- Yahoo Finance por ticker (endpoint dedicado).
+
+GDELT (opcional):
+```zsh
+export GDELT_ENABLED=1
+export GDELT_DOC_API_URL=https://api.gdeltproject.org/api/v2/doc/doc
+export GDELT_MODE=ArtList
+export GDELT_MAXRECORDS=50
+```
+
+Configuración opcional:
+```zsh
+export EXTRA_FEEDS="https://feeds.marketwatch.com/marketwatch/marketpulse/"
+export SEC_USER_AGENT="tp-final-ri-unlu/1.0 tuemail@ejemplo.com"
+```

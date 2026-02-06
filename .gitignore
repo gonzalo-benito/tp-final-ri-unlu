@@ -5,6 +5,10 @@ node_modules
 *.pdf
 *.txt
 *.mdb
+data.ms/
+dumps
+tps-ri/
+logs
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
