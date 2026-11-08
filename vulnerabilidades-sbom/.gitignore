@@ -2,3 +2,6 @@ datos/
 resultados/
 *.jsonl
 *.zip
+
+# el .gitignore de la raíz ignora lib/ (plantilla de python)
+!lib/
