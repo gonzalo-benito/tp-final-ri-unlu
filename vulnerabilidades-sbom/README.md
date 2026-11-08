@@ -34,3 +34,11 @@ python3 -m descargar_nvd --desde 2026-09-01 --hasta 2026-09-01 --salida datos/nv
 python3 -m descargar_nvd --desde 1999-01-01 --hasta 2026-11-07 --salida datos/nvd/cves.jsonl
 ```
 Si se define la variable `NVD_API_KEY` (la NVD da claves gratis) se puede bajar la pausa con `--pausa 1`.
+
+## Descarga de OSV
+```bash
+# Ejecutar desde vulnerabilidades-sbom/
+python3 -m descargar_osv                        # npm, PyPI, Maven, Go y NuGet
+python3 -m descargar_osv --ecosistemas NuGet    # uno solo (es el más chico, sirve para probar)
+```
+Los avisos de GitHub, PyPI y Go que vienen en OSV tienen licencia CC-BY 4.0.
