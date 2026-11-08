@@ -1,0 +1,4 @@
+datos/
+resultados/
+*.jsonl
+*.zip
