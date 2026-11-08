@@ -24,3 +24,13 @@ pip install -r requirements.txt
 ```
 
 Los datos descargados van a `datos/`, que no se sube al repo.
+
+## Descarga de CVE de la NVD
+```bash
+# Ejecutar desde vulnerabilidades-sbom/
+# Un día, para probar
+python3 -m descargar_nvd --desde 2026-09-01 --hasta 2026-09-01 --salida datos/nvd/prueba.jsonl
+# Todo el corpus hasta la fecha de descarga (tarda un rato por el límite de pedidos de la API)
+python3 -m descargar_nvd --desde 1999-01-01 --hasta 2026-11-07 --salida datos/nvd/cves.jsonl
+```
+Si se define la variable `NVD_API_KEY` (la NVD da claves gratis) se puede bajar la pausa con `--pausa 1`.
