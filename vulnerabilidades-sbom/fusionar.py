@@ -5,7 +5,9 @@ import pandas as pd
 import pyterrier as pt
 
 
-def rrf(corridas: list[pd.DataFrame], k: int = 60, profundidad: int = 1000) -> pd.DataFrame:
+def rrf(
+    corridas: list[pd.DataFrame], k: int = 60, profundidad: int = 1000
+) -> pd.DataFrame:
     """
     Reciprocal Rank Fusion: puntaje(d) = suma sobre las corridas de 1 / (k + posición de d),
     con la posición contada desde 1. No mira los puntajes originales, solo las posiciones.
@@ -14,7 +16,9 @@ def rrf(corridas: list[pd.DataFrame], k: int = 60, profundidad: int = 1000) -> p
     for corrida in corridas:
         corrida = corrida.sort_values(["qid", "score"], ascending=[True, False])
         corrida["posicion"] = corrida.groupby("qid").cumcount() + 1
-        for qid, docno, posicion in corrida[["qid", "docno", "posicion"]].itertuples(index=False):
+        for qid, docno, posicion in corrida[["qid", "docno", "posicion"]].itertuples(
+            index=False
+        ):
             if posicion <= profundidad:
                 puntajes[(qid, docno)] += 1.0 / (k + posicion)
 
@@ -35,7 +39,7 @@ def main():
 
     corridas = [pt.io.read_results(r) for r in args.corridas]
     pt.io.write_results(rrf(corridas, args.k), args.salida)
-    print(f"Fusión de {len(corridas)} corridas con k={args.k} en {args.salida}")
+    print(f"[INFO] Fusión de {len(corridas)} corridas con k={args.k} en {args.salida}")
 
 
 if __name__ == "__main__":

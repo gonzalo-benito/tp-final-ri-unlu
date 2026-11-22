@@ -21,13 +21,17 @@ class Evaluacion:
     def __init__(self, ruta_qrels: str, consultas: list[dict]):
         self.estrato = {c["qid"]: c["estrato"] for c in consultas}
         self.qrels = [
-            q for q in ir_measures.read_trec_qrels(ruta_qrels) if q.query_id in self.estrato
+            q
+            for q in ir_measures.read_trec_qrels(ruta_qrels)
+            if q.query_id in self.estrato
         ]
 
     def por_consulta(self, corrida: pd.DataFrame) -> pd.DataFrame:
         """Tabla consulta x métrica, con 0 para las consultas que no devolvieron nada."""
         corrida = corrida.rename(columns={"qid": "query_id", "docno": "doc_id"})
-        corrida = corrida[["query_id", "doc_id", "score"]].astype({"query_id": str, "doc_id": str})
+        corrida = corrida[["query_id", "doc_id", "score"]].astype(
+            {"query_id": str, "doc_id": str}
+        )
         filas = [
             (m.query_id, str(m.measure), m.value)
             for m in ir_measures.iter_calc(METRICAS, self.qrels, corrida)

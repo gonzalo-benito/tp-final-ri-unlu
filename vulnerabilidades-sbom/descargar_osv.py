@@ -15,7 +15,7 @@ def descargar(ecosistema: str, carpeta: str) -> str:
     destino = os.path.join(destino_dir, "all.zip")
 
     url = URL_OSV.format(ecosistema=ecosistema)
-    print(f"Bajando {url}")
+    print(f"[INFO] Bajando {url}")
     with requests.get(url, stream=True, timeout=300) as respuesta:
         respuesta.raise_for_status()
         with open(destino, "wb") as f:

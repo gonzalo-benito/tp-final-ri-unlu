@@ -32,7 +32,11 @@ class IndiceLexico:
     n: int
 
     def __init__(
-        self, carpeta: str, campos: list[str] = None, tokenizacion: str = "palabras", n: int = 4
+        self,
+        carpeta: str,
+        campos: list[str] = None,
+        tokenizacion: str = "palabras",
+        n: int = 4,
     ):
         self.carpeta = os.path.abspath(carpeta)
         self.campos = campos if campos else self.CAMPOS
@@ -89,7 +93,11 @@ class IndiceLexico:
         if self.tokenizacion == "ngramas":
             opciones = {"tokeniser": "whitespace", "stemmer": None, "stopwords": None}
         indexador = pt.IterDictIndexer(
-            self.carpeta, meta={"docno": 20}, text_attrs=["text"], overwrite=True, **opciones
+            self.carpeta,
+            meta={"docno": 20},
+            text_attrs=["text"],
+            overwrite=True,
+            **opciones
         )
         indexador.index(self.documentos(ruta_jsonl))
 

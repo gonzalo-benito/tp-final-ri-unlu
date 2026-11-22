@@ -43,10 +43,14 @@ class ClienteNVD:
             if respuesta.status_code == 200:
                 return respuesta.json()
             espera = self.pausa * (intento + 2)
-            print(f"  la NVD respondió {respuesta.status_code}, reintento en {espera:.0f} s")
+            print(
+                f"[WARN] La NVD respondió {respuesta.status_code}, reintento en {espera:.0f} s"
+            )
             time.sleep(espera)
 
-        raise RuntimeError(f"La NVD no respondió bien después de 5 intentos: {parametros}")
+        raise RuntimeError(
+            f"La NVD no respondió bien después de 5 intentos: {parametros}"
+        )
 
     def partir_rango(
         self, desde: datetime, hasta: datetime

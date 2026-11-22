@@ -10,16 +10,25 @@ def main():
     parser = argparse.ArgumentParser(
         description="Arma consultas (paquetes de npm) y juicios de relevancia desde OSV."
     )
-    parser.add_argument("--osv", default="datos/osv/npm/all.zip", help="Volcado de OSV de npm.")
-    parser.add_argument("--corpus", default="datos/nvd/cves.jsonl", help="CVE de la NVD (JSONL).")
-    parser.add_argument("--carpeta", default="datos/coleccion", help="Carpeta de salida.")
     parser.add_argument(
-        "--desarrollo", type=int, default=20, help="Porcentaje de consultas para desarrollo."
+        "--osv", default="datos/osv/npm/all.zip", help="Volcado de OSV de npm."
+    )
+    parser.add_argument(
+        "--corpus", default="datos/nvd/cves.jsonl", help="CVE de la NVD (JSONL)."
+    )
+    parser.add_argument(
+        "--carpeta", default="datos/coleccion", help="Carpeta de salida."
+    )
+    parser.add_argument(
+        "--desarrollo",
+        type=int,
+        default=20,
+        help="Porcentaje de consultas para desarrollo.",
     )
     args = parser.parse_args()
 
     os.makedirs(args.carpeta, exist_ok=True)
-    print("Leyendo el corpus...")
+    print("[INFO] Leyendo el corpus...")
     descripciones = leer_descripciones(args.corpus)
     print(f"  {len(descripciones)} CVE")
 

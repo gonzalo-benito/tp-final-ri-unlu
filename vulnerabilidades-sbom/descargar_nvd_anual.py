@@ -15,10 +15,10 @@ URL_ANUAL = "https://nvd.nist.gov/feeds/json/cve/2.0/nvdcve-2.0-{anio}.json.gz"
 def bajar_anio(anio: int, carpeta: str) -> str:
     destino = os.path.join(carpeta, f"nvdcve-2.0-{anio}.json.gz")
     if os.path.exists(destino):
-        print(f"  {destino} ya existe, no se baja de nuevo")
+        print(f"[INFO] {destino} ya existe, no se baja de nuevo")
         return destino
     url = URL_ANUAL.format(anio=anio)
-    print(f"Bajando {url}")
+    print(f"[INFO] Bajando {url}")
     with requests.get(url, stream=True, timeout=300) as respuesta:
         respuesta.raise_for_status()
         with open(destino, "wb") as f:
@@ -31,10 +31,16 @@ def main():
     parser = argparse.ArgumentParser(
         description="Baja los volcados anuales de la NVD y los junta en un JSONL con los campos a indexar."
     )
-    parser.add_argument("--desde", type=int, default=2002, help="Primer año (la NVD arranca en 2002).")
+    parser.add_argument(
+        "--desde", type=int, default=2002, help="Primer año (la NVD arranca en 2002)."
+    )
     parser.add_argument("--hasta", type=int, default=2026, help="Último año.")
-    parser.add_argument("--carpeta", default="datos/nvd/anual", help="Dónde guardar los .json.gz.")
-    parser.add_argument("--salida", default="datos/nvd/cves.jsonl", help="Archivo JSONL de salida.")
+    parser.add_argument(
+        "--carpeta", default="datos/nvd/anual", help="Dónde guardar los .json.gz."
+    )
+    parser.add_argument(
+        "--salida", default="datos/nvd/cves.jsonl", help="Archivo JSONL de salida."
+    )
     args = parser.parse_args()
 
     os.makedirs(args.carpeta, exist_ok=True)

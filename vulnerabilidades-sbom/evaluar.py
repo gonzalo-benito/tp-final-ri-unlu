@@ -12,15 +12,23 @@ def main():
     parser = argparse.ArgumentParser(
         description="Evalúa corridas TREC y las compara contra una línea de base."
     )
-    parser.add_argument("--corridas", nargs="+", required=True, help="nombre=archivo.run")
+    parser.add_argument(
+        "--corridas", nargs="+", required=True, help="nombre=archivo.run"
+    )
     parser.add_argument("--base", default="BM25", help="Nombre de la corrida de base.")
     parser.add_argument("--coleccion", default="datos/coleccion")
-    parser.add_argument("--particion", default="desarrollo", choices=["desarrollo", "prueba"])
-    parser.add_argument("--salida", default="", help="Prefijo para guardar las tablas (TSV).")
+    parser.add_argument(
+        "--particion", default="desarrollo", choices=["desarrollo", "prueba"]
+    )
+    parser.add_argument(
+        "--salida", default="", help="Prefijo para guardar las tablas (TSV)."
+    )
     args = parser.parse_args()
 
     consultas = [
-        c for c in ColeccionPrueba.cargar_consultas(args.coleccion) if c["particion"] == args.particion
+        c
+        for c in ColeccionPrueba.cargar_consultas(args.coleccion)
+        if c["particion"] == args.particion
     ]
     evaluacion = Evaluacion(f"{args.coleccion}/qrels.txt", consultas)
 
@@ -36,7 +44,9 @@ def main():
     print(tabla[columnas].round(4).to_string(index=False))
 
     otros = {n: d for n, d in detalles.items() if n != args.base}
-    comparacion = Evaluacion.comparar(detalles[args.base], otros, ["nDCG@10", "AP", "R@100"])
+    comparacion = Evaluacion.comparar(
+        detalles[args.base], otros, ["nDCG@10", "AP", "R@100"]
+    )
     print()
     print(comparacion.round(4).to_string(index=False))
 

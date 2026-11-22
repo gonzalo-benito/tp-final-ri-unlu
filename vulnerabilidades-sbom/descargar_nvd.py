@@ -12,7 +12,9 @@ def main():
         description="Baja de la NVD las CVE publicadas en un rango de fechas y las guarda en JSONL."
     )
     parser.add_argument("--desde", required=True, help="Fecha inicial, AAAA-MM-DD.")
-    parser.add_argument("--hasta", required=True, help="Fecha final (inclusive), AAAA-MM-DD.")
+    parser.add_argument(
+        "--hasta", required=True, help="Fecha final (inclusive), AAAA-MM-DD."
+    )
     parser.add_argument(
         "--salida", default="datos/nvd/cves.jsonl", help="Archivo JSONL de salida."
     )
@@ -22,7 +24,9 @@ def main():
     args = parser.parse_args()
 
     desde = datetime.strptime(args.desde, "%Y-%m-%d")
-    hasta = datetime.strptime(args.hasta, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+    hasta = datetime.strptime(args.hasta, "%Y-%m-%d").replace(
+        hour=23, minute=59, second=59
+    )
 
     os.makedirs(os.path.dirname(args.salida) or ".", exist_ok=True)
     cliente = ClienteNVD(pausa=args.pausa)

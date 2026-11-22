@@ -128,10 +128,19 @@ class ColeccionPrueba:
         """
         with open(f"{carpeta}/consultas.tsv", "w", encoding="utf-8", newline="") as f:
             w = csv.writer(f, delimiter="\t")
-            w.writerow(["qid", "paquete", "particion", "relevantes", "mencionan", "estrato"])
+            w.writerow(
+                ["qid", "paquete", "particion", "relevantes", "mencionan", "estrato"]
+            )
             for c in self.consultas:
                 w.writerow(
-                    [c.id, c.paquete, c.particion, len(c.relevantes), c.mencionan, c.estrato()]
+                    [
+                        c.id,
+                        c.paquete,
+                        c.particion,
+                        len(c.relevantes),
+                        c.mencionan,
+                        c.estrato(),
+                    ]
                 )
         with open(f"{carpeta}/qrels.txt", "w", encoding="utf-8") as f:
             for c in self.consultas:
