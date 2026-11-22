@@ -1,0 +1,5 @@
+requests
+pandas
+python-terrier
+ir_measures
+scipy

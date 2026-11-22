@@ -5,3 +5,6 @@ resultados/
 
 # el .gitignore de la raíz ignora lib/ (plantilla de python)
 !lib/
+
+# el .gitignore de la raíz ignora *.txt
+!requirements.txt
