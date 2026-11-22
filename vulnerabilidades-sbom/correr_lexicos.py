@@ -37,6 +37,8 @@ def main():
         choices=IndiceLexico.CAMPOS,
         help="Campos del registro que entran al índice (usar otra carpeta de índice si se cambian).",
     )
+    parser.add_argument("--tokenizacion", default="palabras", choices=["palabras", "ngramas"])
+    parser.add_argument("--n", type=int, default=4, help="Largo de los n-gramas de caracteres.")
     parser.add_argument("--particion", default="desarrollo", choices=["desarrollo", "prueba"])
     parser.add_argument("--modelos", nargs="+", default=["BM25", "TF_IDF"])
     parser.add_argument("--resultados", default="resultados")
@@ -46,7 +48,7 @@ def main():
     if not pt.java.started():
         pt.java.init()
 
-    indice = IndiceLexico(args.indice, args.campos)
+    indice = IndiceLexico(args.indice, args.campos, args.tokenizacion, args.n)
     if not indice.existe():
         print("Construyendo el índice (tarda unos minutos)...")
         indice.construir(args.corpus)
@@ -55,7 +57,7 @@ def main():
         c for c in ColeccionPrueba.cargar_consultas(args.coleccion) if c["particion"] == args.particion
     ]
     estrato = {c["qid"]: c["estrato"] for c in consultas}
-    topicos = IndiceLexico.consultas_df(consultas)
+    topicos = indice.consultas_df(consultas)
     qrels = [q for q in ir_measures.read_trec_qrels(f"{args.coleccion}/qrels.txt") if q.query_id in estrato]
     print(f"Partición {args.particion}: {len(topicos)} consultas, {len(qrels)} juicios")
 
