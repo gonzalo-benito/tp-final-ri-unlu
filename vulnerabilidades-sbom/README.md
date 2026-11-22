@@ -66,8 +66,30 @@ Deja en `datos/coleccion/`:
 ```bash
 # Ejecutar desde vulnerabilidades-sbom/. La primera vez construye el índice (~1 minuto).
 python3 -m correr_lexicos                                  # BM25 y TF-IDF, partición de desarrollo
+# Variante con n-gramas de caracteres (n=4 fue el mejor en desarrollo)
+python3 -m correr_lexicos --tokenizacion ngramas --n 4 --indice datos/indices/ngramas4 --nombre=_ngramas4 --modelos BM25
 # Para ver qué aporta cada campo, otro índice con menos campos
 python3 -m correr_lexicos --campos descripcion --indice datos/indices/palabras_descripcion --nombre=_descripcion
 ```
 Las corridas (formato TREC) y la tabla de métricas quedan en `resultados/`. La partición de
 prueba no se toca hasta tener los sistemas ajustados sobre desarrollo.
+
+## Recuperador denso (Sentence-BERT + FAISS)
+```bash
+# Ejecutar desde vulnerabilidades-sbom/. La primera vez codifica todo el corpus:
+# en una CPU de 4 núcleos tardó 1 h 48 min. Después cada corrida tarda segundos.
+python3 -m correr_denso
+```
+
+## Fusión y comparación
+```bash
+# Ejecutar desde vulnerabilidades-sbom/
+python3 -m fusionar --corridas resultados/desarrollo-BM25.run resultados/desarrollo-denso.run \
+    --salida resultados/desarrollo-RRF_BM25_denso.run
+python3 -m evaluar --corridas BM25=resultados/desarrollo-BM25.run \
+    BM25_ng4=resultados/desarrollo-BM25_ngramas4.run \
+    RRF_BM25_denso=resultados/desarrollo-RRF_BM25_denso.run \
+    --salida resultados/desarrollo-comparacion
+```
+`evaluar` compara cada corrida contra la de base (BM25 por defecto) con t pareada y Wilcoxon,
+y ajusta los p-valores con Holm por la cantidad total de comparaciones.
